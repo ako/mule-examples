@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesource.org/schema/mule/core/2.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:http="http://www.mulesource.org/schema/mule/http/2.2" xmlns:vm="http://www.mulesource.org/schema/mule/vm/2.2"
+	xmlns:scripting="http://www.mulesource.org/schema/mule/scripting/2.2"
+	xsi:schemaLocation="
+               http://www.mulesource.org/schema/mule/scripting/2.2 http://www.mulesource.org/schema/mule/scripting/2.2/mule-scripting.xsd
+               http://www.mulesource.org/schema/mule/core/2.2 http://www.mulesource.org/schema/mule/core/2.2/mule.xsd
+               http://www.mulesource.org/schema/mule/http/2.2 http://www.mulesource.org/schema/mule/http/2.2/mule-http.xsd
+               http://www.mulesource.org/schema/mule/vm/2.2 http://www.mulesource.org/schema/mule/vm/2.2/mule-vm.xsd">
+
+  <scripting:transformer name="xTransformer">
+    <scripting:script engine="groovy">
+      <![CDATA[
+	  payload + "x"
+      ]]>
+    </scripting:script>
+  </scripting:transformer>
+  
+  <byte-array-to-string-transformer name="byteArrayToString" />
+
+  <model name="sync-multicast-example">
+
+    <service name="s1">
+      <inbound>
+        <http:inbound-endpoint host="localhost" port="11110" path="response-transformer-example" synchronous="true"
+          name="s1.inbound.http"  />
+      </inbound>     
+      <outbound>
+        <pass-through-router>
+          <http:outbound-endpoint host="localhost" port="11110" path="service1" synchronous="true"
+          name="s1.outbound.http.1" responseTransformer-refs="byteArrayToString xTransformer" />
+        </pass-through-router>
+      </outbound>
+    </service>
+
+    <service name="service1">
+      <inbound>
+        <http:inbound-endpoint host="localhost" port="11110" path="service1" synchronous="true"
+          name="service1.inbound.http"  />
+      </inbound>
+      <scripting:component>
+        <scripting:script engine="groovy">
+          <![CDATA[
+          String s = "Service 1 result"
+          return s
+          ]]>
+        </scripting:script>
+      </scripting:component>
+    </service>
+
+  </model>
+</mule>
