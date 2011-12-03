@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:stdio="http://www.mulesoft.org/schema/mule/stdio"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:script="http://www.mulesoft.org/schema/mule/scripting"
+      xmlns:cxf="http://www.mulesoft.org/schema/mule/cxf"
+      xmlns:pattern="http://www.mulesoft.org/schema/mule/pattern"
+
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/stdio http://www.mulesoft.org/schema/mule/stdio/3.2/mule-stdio.xsd
+        http://www.mulesoft.org/schema/mule/core  http://www.mulesoft.org/schema/mule/core/3.2/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/3.2/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/3.2/mule-scripting.xsd
+        http://www.mulesoft.org/schema/mule/cxf http://www.mulesoft.org/schema/mule/cxf/3.2/mule-cxf.xsd
+        http://www.mulesoft.org/schema/mule/pattern http://www.mulesoft.org/schema/mule/pattern/3.2/mule-pattern.xsd
+       ">
+
+    <http:endpoint name="http-in" host="localhost" port="18080" path = "echo" />
+    <!-- a script implementin a soap service using plain text -->
+    <script:script name="echoHttpMock" engine="groovy" file="echoHttpMock.groovy" />
+    
+    <flow name="echoHttpMockFlow">
+        <http:inbound-endpoint ref="http-in"/>
+        <script:component script-ref="echoHttpMock"/>
+    </flow>
+
+    <pattern:simple-service name="echoJaxWsMockService" address="http://localhost:18081/echo" 
+        type="jax-ws" component-class="HelloWorldWs" />    
+</mule>

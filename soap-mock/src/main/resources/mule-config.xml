@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:stdio="http://www.mulesoft.org/schema/mule/stdio"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/stdio http://www.mulesoft.org/schema/mule/stdio/3.2/mule-stdio.xsd
+        http://www.mulesoft.org/schema/mule/core  http://www.mulesoft.org/schema/mule/core/3.2/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/3.2/mule-http.xsd
+       ">
+
+    <stdio:connector name="stdio" promptMessage="Yes? " messageDelayTime="1000"/>
+    <http:endpoint name="http-in" host="localhost" port="8080" path = "helloworld" />
+    <flow name="echo">
+        <stdio:inbound-endpoint system="IN"/>
+        <stdio:outbound-endpoint system="OUT"/>
+    </flow>
+    <flow name="httpEcho">
+        <http:inbound-endpoint ref="http-in"/>
+        <!--
+        <http:inbound-endpoint ref="http-in"/>
+        <stdio:outbound-endpoint system="OUT"/>
+        <http:outbound-endpoint ref="http-in"/>
+        -->
+    </flow>
+
+</mule>
+
