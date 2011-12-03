@@ -11,7 +11,6 @@ import javax.xml.bind.annotation.*
 class HelloWorldWs {
     @WebMethod(operationName="echo")
     def String echo(String name){
-        println "Hi ${name}"
         return "Hi ${name}"
     }
 }
