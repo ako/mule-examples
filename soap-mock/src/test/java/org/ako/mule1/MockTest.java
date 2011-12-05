@@ -15,7 +15,7 @@ import org.mule.transport.NullPayload;
 /**
  * Unit test for simple App.
  */
-public class AppTest
+public class MockTest
         extends FunctionalTestCase {
 
     @Override

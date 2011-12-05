@@ -5,26 +5,43 @@
       xmlns:stdio="http://www.mulesoft.org/schema/mule/stdio"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xmlns:http="http://www.mulesoft.org/schema/mule/http"
+       xmlns:pattern="http://www.mulesoft.org/schema/mule/pattern"
       xsi:schemaLocation="
         http://www.mulesoft.org/schema/mule/stdio http://www.mulesoft.org/schema/mule/stdio/3.2/mule-stdio.xsd
         http://www.mulesoft.org/schema/mule/core  http://www.mulesoft.org/schema/mule/core/3.2/mule.xsd
         http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/3.2/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/pattern http://www.mulesoft.org/schema/mule/pattern/3.2/mule-pattern.xsd
        ">
 
-    <stdio:connector name="stdio" promptMessage="Yes? " messageDelayTime="1000"/>
-    <http:endpoint name="http-in" host="localhost" port="8080" path = "helloworld" />
-    <flow name="echo">
-        <stdio:inbound-endpoint system="IN"/>
-        <stdio:outbound-endpoint system="OUT"/>
-    </flow>
-    <flow name="httpEcho">
-        <http:inbound-endpoint ref="http-in"/>
+    <http:connector name="http" />
+    <pattern:web-service-proxy name="secure-proxy">
+        <inbound-endpoint connector-ref="http" exchange-pattern="request-response" address="http://localhost:8080/">
+            <logger message="security-proxy: received request to #[header:INBOUND:http.request]" level="INFO" />
+            <logger message="security-proxy: received request with headers #[headers:*]" level="INFO" />
+            <response>
+                <logger message="security-proxy: received response with headers #[headers:*]" level="INFO"/>
+            </response>
+        </inbound-endpoint>
         <!--
-        <http:inbound-endpoint ref="http-in"/>
-        <stdio:outbound-endpoint system="OUT"/>
-        <http:outbound-endpoint ref="http-in"/>
+        <choice>
+            <when evaluator="header" expression="inbound:Content-Encoding='gzip'">
+                <gzip-uncompress-transformer/>
+            </when>
+            <otherwise>
+                <logger message="Here I should do other stuff" level="INFO" />
+            </otherwise>
+        </choice> 
         -->
-    </flow>
+        <outbound-endpoint connector-ref="http" address="http:/#[header:INBOUND:http.request]" exchange-pattern="request-response">
+            <logger message="security-proxy: received response 1 from #[header:INBOUND:http.request]"  level="INFO"/>
+            <response>
+                <logger message="security-proxy: received response 2 from #[header:INBOUND:http.request]"  level="INFO"/>
+                <logger message="security-proxy: received response with headers #[headers:*]" level="INFO"/>
+                
+                <gzip-uncompress-transformer/>
+            </response>
+        </outbound-endpoint>
+    </pattern:web-service-proxy>
 
 </mule>
 

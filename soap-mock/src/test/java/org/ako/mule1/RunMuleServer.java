@@ -11,12 +11,12 @@ import org.mule.context.DefaultMuleContextFactory;
  * Hello world!
  *
  */
-public class App {
+public class RunMuleServer {
 
     public static void main(String[] args) throws ConfigurationException, InitialisationException, MuleException {
         System.out.println("Starting Mule!");
         DefaultMuleContextFactory muleContextFactory = new DefaultMuleContextFactory();
-        SpringXmlConfigurationBuilder configBuilder = new SpringXmlConfigurationBuilder("mule-config.xml");
+        SpringXmlConfigurationBuilder configBuilder = new SpringXmlConfigurationBuilder("mule-config.xml,mock-mule-config.xml");
         MuleContext muleContext = muleContextFactory.createMuleContext(configBuilder);
         muleContext.start();
     }

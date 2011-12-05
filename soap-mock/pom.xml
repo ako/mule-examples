@@ -113,7 +113,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.2.1</version>
                 <configuration>
-                    <mainClass>org.ako.mule1.App</mainClass>
+                    <mainClass>org.ako.mule1.RunMuleServer</mainClass>
                 </configuration>
             </plugin>
             <plugin>

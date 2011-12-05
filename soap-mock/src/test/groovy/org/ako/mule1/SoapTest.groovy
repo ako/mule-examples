@@ -5,6 +5,7 @@ import org.mule.tck.FunctionalTestCase
 import org.mule.module.client.MuleClient
 import org.mule.api.MuleMessage
 import groovy.xml.MarkupBuilder
+import org.junit.Assert
 
 /**
  *
@@ -19,7 +20,6 @@ class SoapTest  extends FunctionalTestCase {
     
     @Test
     def public void testSoap1() {
-        println "Hi"
         
         /*
          * Create soap message
@@ -44,9 +44,16 @@ class SoapTest  extends FunctionalTestCase {
          */
         MuleClient client = new MuleClient(muleContext)
         MuleMessage result = client.send("http://localhost:18081/echo", writer.toString(), null)
-        
         println "Payload received: ${result.getPayloadAsString()}"
-        fail "oops"
+        
+        /*
+         * Check
+         */
+        def expectedResult = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'+
+        '<soap:Body><ns2:echoResponse xmlns:ns2="http://ako.org">'+
+        '<return>Hi HelloWorld!</return></ns2:echoResponse></soap:Body></soap:Envelope>'
+
+        Assert.assertEquals(result.getPayloadAsString(),expectedResult)
     }
 }
 

@@ -17,15 +17,38 @@
         http://www.mulesoft.org/schema/mule/pattern http://www.mulesoft.org/schema/mule/pattern/3.2/mule-pattern.xsd
        ">
 
-    <http:endpoint name="http-in" host="localhost" port="18080" path = "echo" />
+    <http:endpoint name="jaxws-mock-in" host="localhost" port="18081" path = "echo" exchange-pattern="request-response"/>
+    <http:endpoint name="zipped-jaxws-mock-in" host="localhost" port="18081" path = "echo-zipped" exchange-pattern="request-response"/>
+    <http:endpoint name="http-mock-in" host="localhost" port="18080" path = "echo" exchange-pattern="request-response"/>
     <!-- a script implementin a soap service using plain text -->
     <script:script name="echoHttpMock" engine="groovy" file="echoHttpMock.groovy" />
     
+    <gzip-compress-transformer name="gzip-compress-transformer"/>
+    
     <flow name="echoHttpMockFlow">
-        <http:inbound-endpoint ref="http-in"/>
+        <http:inbound-endpoint ref="http-mock-in"/>
         <script:component script-ref="echoHttpMock"/>
     </flow>
 
-    <pattern:simple-service name="echoJaxWsMockService" address="http://localhost:18081/echo" 
-        type="jax-ws" component-class="HelloWorldWs" />    
+    <pattern:simple-service name="echoJaxWsMockService" 
+        type="jax-ws" component-class="HelloWorldWs"  >
+        <http:inbound-endpoint ref="jaxws-mock-in">
+            <logger message="echo-jaxws-mock-service: received request"  level="INFO"/>
+        </http:inbound-endpoint>
+    </pattern:simple-service>
+    
+    <pattern:simple-service name="echoZippedJaxWsMockService" 
+        type="jax-ws" component-class="HelloWorldWs">
+        <http:inbound-endpoint ref="zipped-jaxws-mock-in" >
+            <logger message="echo-jaxws-mock-service: received request"  level="INFO"/>
+            <response>
+                <string-to-byte-array-transformer/>
+                <gzip-compress-transformer/>
+                <message-properties-transformer scope="outbound">
+                    <add-message-property key="Content-Encoding" value="gzip" />
+                </message-properties-transformer>
+                <logger message="echo-jaxws-mock-service: sending response with headers #[headers:*]"  level="INFO"/>
+            </response>
+        </http:inbound-endpoint>
+    </pattern:simple-service>
 </mule>
