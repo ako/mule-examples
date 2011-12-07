@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns="http://ako.org/echo"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://ako.org/echo"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+    <xsd:element name="message" type="xsd:string">
+
+    </xsd:element>
+</xsd:schema>

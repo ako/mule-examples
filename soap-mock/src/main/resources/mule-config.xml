@@ -14,34 +14,34 @@
        ">
 
     <http:connector name="http" />
-    <pattern:web-service-proxy name="secure-proxy">
+    <flow name="secure-proxy">
         <inbound-endpoint connector-ref="http" exchange-pattern="request-response" address="http://localhost:8080/">
             <logger message="security-proxy: received request to #[header:INBOUND:http.request]" level="INFO" />
             <logger message="security-proxy: received request with headers #[headers:*]" level="INFO" />
             <response>
                 <logger message="security-proxy: received response with headers #[headers:*]" level="INFO"/>
             </response>
-        </inbound-endpoint>
-        <!--
-        <choice>
-            <when evaluator="header" expression="inbound:Content-Encoding='gzip'">
-                <gzip-uncompress-transformer/>
-            </when>
-            <otherwise>
-                <logger message="Here I should do other stuff" level="INFO" />
-            </otherwise>
-        </choice> 
-        -->
+        </inbound-endpoint>    
         <outbound-endpoint connector-ref="http" address="http:/#[header:INBOUND:http.request]" exchange-pattern="request-response">
             <logger message="security-proxy: received response 1 from #[header:INBOUND:http.request]"  level="INFO"/>
             <response>
                 <logger message="security-proxy: received response 2 from #[header:INBOUND:http.request]"  level="INFO"/>
+                <logger message="security-proxy: received response 2 with Content-Encoding: #[header:INBOUND:Content-Encoding]"  level="INFO"/>
                 <logger message="security-proxy: received response with headers #[headers:*]" level="INFO"/>
-                
-                <gzip-uncompress-transformer/>
             </response>
         </outbound-endpoint>
-    </pattern:web-service-proxy>
+        <choice>
+            <when evaluator="header" expression="INBOUND:Content-Encoding='gzip'">
+                <logger message="security-proxy: received response 2 with Content-Encoding: #[header:INBOUND:Content-Encoding]"  level="INFO"/>
+                <logger message="security-proxy: gzipped content detected - unzipping" level="INFO" />
+                <gzip-uncompress-transformer/>
+            </when>
+            <otherwise>
+                <logger message="security-proxy: received response 2 with Content-Encoding: #[header:INBOUND:Content-Encoding]"  level="INFO"/>
+                <logger message="security-proxy: unzipped content - unzipping not needed" level="INFO" />
+            </otherwise>
+        </choice> 
+    </flow>
 
 </mule>
 

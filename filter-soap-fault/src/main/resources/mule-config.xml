@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:mule-xml="http://www.mulesoft.org/schema/mule/xml"
+      xmlns:spring="http://www.springframework.org/schema/beans"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core  http://www.mulesoft.org/schema/mule/core/3.2/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/3.2/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/3.2/mule-xml.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       ">
+    <spring:beans>
+        <spring:bean id="xsdRepo"
+                     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+            <spring:property name="location" value="classpath:xsd-repository.properties"/>
+        </spring:bean>
+        <spring:bean id="xsdRepo2"
+                     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+            <spring:property name="location" value="classpath:xsd-repository.properties"/>
+        </spring:bean>
+        <spring:bean id="bean1" class="java.lang.String">
+             <spring:constructor-arg type="java.lang.String" value="42"/>
+        </spring:bean>
+    </spring:beans>
+
+    <http:connector name="http"/>
+
+    <flow name="xsd-validator">
+        <!--
+          == Define proxy inbound endpoint
+          -->
+        <inbound-endpoint connector-ref="http" exchange-pattern="request-response" address="http://localhost:8080/">
+            <logger message="XSD validator - message received for #[header:INBOUND:http.request] " level="INFO"/>
+            <message-properties-transformer scope="session">
+                <add-message-property key="xsdfile1" value="#[header:INBOUND:http.request]"/>
+                <add-message-property key="xsdfile2" value="${test}"/>
+                <add-message-property key="xsdfile3" value="${#[header:INBOUND:http.request]}"/>
+            </message-properties-transformer>
+            <logger message="XSD validator sending approved message to #[bean:xsdRepo]" level="INFO"/>
+        </inbound-endpoint>
+        <!--
+          == Validate message with xsd
+          -->
+        <logger message="XSD validator - validating message using #[header:INBOUND:http.request]" level="INFO"/>
+        <message-filter throwOnUnaccepted="true">
+            <mule-xml:schema-validation-filter schemaLocations="echo-message.xsd"/>
+        </message-filter>
+        <logger message="XSD validator - validated message" level="INFO"/>
+        <!--
+          == Message is valid, send to destination
+          -->
+        <outbound-endpoint connector-ref="http" address="http:/#[header:INBOUND:http.request]"
+                           exchange-pattern="request-response">
+            <logger message="XSD validator sending approved message to #[header:INBOUND:http.request]" level="INFO"/>
+        </outbound-endpoint>
+        <!--
+          == Handled invalid messages, need to create a SOAP fault
+          -->
+        <default-exception-strategy>
+            <logger message="XSD validator - oops, invalid message " level="INFO"/>
+        </default-exception-strategy>
+    </flow>
+
+</mule>
