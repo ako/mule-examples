@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+      xmlns:script="http://www.mulesoft.org/schema/mule/scripting"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core  http://www.mulesoft.org/schema/mule/core/3.2/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/3.2/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/3.2/mule-vm.xsd
+        http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/3.2/mule-scripting.xsd
+       ">
+    <script:transformer name="filterExceptionTransformer">
+        <script:script engine="groovy">
+          <![CDATA[
+          if ( message.exceptionPayload instanceof org.mule.message.DefaultExceptionPayload ){
+            message.payload = "Validation failed..."
+            message.exceptionPayload = null
+            message.setProperty('http.status','406')
+          }
+          log.info "Message: ${message}"
+          return message
+          ]]>
+        </script:script>
+    </script:transformer>
+
+    <model>
+        <service name="httpRequest">
+            <inbound>
+                <http:inbound-endpoint exchange-pattern="request-response"
+                                       address="http://localhost:8080/filter-transformer-example"
+                                       responseTransformer-refs="filterExceptionTransformer"/>
+            </inbound>
+            <outbound>
+                <pass-through-router>
+                    <vm:outbound-endpoint path="validationFlow.in" exchange-pattern="request-response"/>
+                </pass-through-router>
+            </outbound>
+        </service>
+    </model>
+
+    <flow name="filter-transformer-example">
+        <composite-source>
+            <http:inbound-endpoint exchange-pattern="request-response"
+                                       address="http://localhost:8081/filter-transformer-example"
+                                       responseTransformer-refs="filterExceptionTransformer"/>
+            <vm:inbound-endpoint path="validationFlow.in" exchange-pattern="request-response"/>
+        </composite-source>
+        <logger message="Message received in validation flow ${message}" level="INFO"/>
+        <message-filter throwOnUnaccepted="true">
+            <regex-filter pattern="the quick brown (.*)"/>
+        </message-filter>
+        <append-string-transformer message="abc"/>
+    </flow>
+</mule>
