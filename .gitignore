@@ -1,0 +1,6 @@
+/soap-mock/.mule/
+/soap-mock/target/
+*.iml
+*.ipr
+*.iws
+catalog.xml
