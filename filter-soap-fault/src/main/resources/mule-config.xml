@@ -5,24 +5,25 @@
       xmlns:mule-xml="http://www.mulesoft.org/schema/mule/xml"
       xmlns:spring="http://www.springframework.org/schema/beans"
       xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+      xmlns:context="http://www.springframework.org/schema/context"
       xsi:schemaLocation="
         http://www.mulesoft.org/schema/mule/core  http://www.mulesoft.org/schema/mule/core/3.2/mule.xsd
         http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/3.2/mule-http.xsd
         http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/3.2/mule-xml.xsd
         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
         http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/3.2/mule-vm.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
        ">
+    <!--
+        <context:property-placeholder location="classpath:xsd-repository.properties"
+                                      system-properties-mode="OVERRIDE"
+                                      ignore-resource-not-found="false"
+                                      ignore-unresolvable="false"/>
+    -->
     <spring:beans>
         <spring:bean id="xsdRepo"
                      class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
             <spring:property name="location" value="classpath:xsd-repository.properties"/>
-        </spring:bean>
-        <spring:bean id="xsdRepo2"
-                     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-            <spring:property name="location" value="classpath:xsd-repository.properties"/>
-        </spring:bean>
-        <spring:bean id="bean1" class="java.lang.String">
-            <spring:constructor-arg type="java.lang.String" value="42"/>
         </spring:bean>
     </spring:beans>
 
@@ -41,8 +42,18 @@
                     <logger message="Message received #[mule:message.payload(java.lang.String)]" level="INFO"/>
                     <message-properties-transformer scope="session">
                         <add-message-property key="proxy.path" value="#[header:INBOUND:http.request]"/>
-                        <add-message-property key="proxy.address" value="#[groovy:message.getInboundProperty('http.request')[1..-1]]"/>
+                        <add-message-property key="proxy.address"
+                                              value="#[groovy:message.getInboundProperty('http.request')[1..-1]]"/>
+                        <add-message-property key="xsd-key" value="test"/>
+                        <add-message-property key="xsd-value" value="#[bean:context.test]"/>
+                        <add-message-property key="mbean1" value="${test}"/>
+                        <add-message-property key="mbean1.1" value="#[groovy:properties]"/>
+                        <add-message-property key="mbean2" value="#[groovy:registry.xsdRepo.test]"/>
+                        <add-message-property key="mbean3" value="#[bean:xsdRepo.test]"/>
+                        <add-message-property key="xsd-validation-schemas" value="${test}"/>
                     </message-properties-transformer>
+                    <logger message="===> Properties: #[groovy:registry.xsdRepo.test]" level="INFO"/>
+                    <logger message="===> Properties: #[groovy:properties]" level="INFO"/>
                 </http:inbound-endpoint>
             </inbound>
             <outbound>
@@ -66,11 +77,8 @@
         <!--
           == Send request to destination
           -->
-        <!--
-        <logger message="XSD validator sending message to #[bean:xsdRepo]" level="INFO"/>
-        -->
         <http:outbound-endpoint connector-ref="http" address="http://#[header:SESSION:proxy.address]"
-                           exchange-pattern="request-response">
+                                exchange-pattern="request-response">
             <logger message="XSD validator sending message to http://#[header:SESSION:proxy.address]" level="INFO"/>
         </http:outbound-endpoint>
         <!--
@@ -79,8 +87,9 @@
         <logger message="XSD validator - validating message received from http://#[header:SESSION:proxy.address]"
                 level="INFO"/>
         <logger message="XSD validator - message received: #[mule:message.payload(java.lang.String)]" level="INFO"/>
+        <logger message="XSD validator - validating using #[header:SESSION:xsd-validation-schemas]" level="INFO"/>
         <message-filter throwOnUnaccepted="true">
-            <mule-xml:schema-validation-filter schemaLocations="${test}"/>
+            <mule-xml:schema-validation-filter schemaLocations="#[header:SESSION:xsd-validation-schemas]"/>
         </message-filter>
         <!--
           == Message is valid

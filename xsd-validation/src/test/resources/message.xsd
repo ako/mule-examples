@@ -4,7 +4,7 @@
             targetNamespace="http://ako.org/echo"
             elementFormDefault="qualified"
             attributeFormDefault="unqualified">
-    <xsd:element name="ReturnMessage" type="xsd:string">
+    <xsd:element name="Message" type="xsd:string">
 
     </xsd:element>
 </xsd:schema>

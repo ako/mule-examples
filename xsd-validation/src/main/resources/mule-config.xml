@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:mule-xml="http://www.mulesoft.org/schema/mule/xml"
+      xmlns:spring="http://www.springframework.org/schema/beans"
+      xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+      xmlns:context="http://www.springframework.org/schema/context"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core  http://www.mulesoft.org/schema/mule/core/3.2/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/3.2/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/3.2/mule-xml.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/3.2/mule-vm.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       ">
+    <flow name="xsd-validator">
+        <!--
+          == Define proxy inbound endpoint
+          -->
+        <vm:inbound-endpoint exchange-pattern="request-response" path="xmlValidationProxy.in">
+            <logger message="XSD validator - message received #[groovy:message.payload]" level="INFO"/>
+        </vm:inbound-endpoint>
+        <!--
+          == Validate message received from destination with xsd
+          -->
+        <message-properties-transformer scope="session">
+            <add-message-property key="schema.locations" value="message.xsd"/>
+        </message-properties-transformer>
+        <logger message="XSD validator - message received #[groovy:'location.xsd']" level="INFO"/>
+        <message-filter throwOnUnaccepted="true">
+            <custom-filter name="xsdValidationFilter"
+                           class="org.ako.mule.xsdvalidation.XsdValidationFilter">
+                <spring:property name="schemaLocations" value=""/>
+            </custom-filter>
+        </message-filter>
+        <!--
+          == Message is valid
+          -->
+        <logger message="XSD validator - validated message" level="INFO"/>
+    </flow>
+</mule>

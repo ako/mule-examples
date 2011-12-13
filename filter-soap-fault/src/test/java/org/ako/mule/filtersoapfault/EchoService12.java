@@ -13,6 +13,6 @@ public class EchoService12 {
     @WebMethod(operationName="echo")
     public String echo(String name){
         logger.info("echo service: " + name);
-        return "Hi " + name;
+        return "<rmns:ReturnMessage xmlns:rmns='http://ako.org/echo'>" + name + "<rmns:ReturnMessage>";
     }
 }

@@ -5,3 +5,5 @@
 *.iws
 catalog.xml
 *~
+.idea
+*.class
