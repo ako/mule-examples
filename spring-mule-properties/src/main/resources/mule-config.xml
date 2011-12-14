@@ -10,18 +10,14 @@
         http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/3.2/mule-vm.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
        ">
+    <!-- configure property placeholder -->
     <context:property-placeholder location="classpath:application.properties"
                                   system-properties-mode="OVERRIDE"
                                   ignore-resource-not-found="false"
                                   ignore-unresolvable="false"/>
-
+    <!-- configure bean to read the same properties -->
     <spring:beans>
-        <spring:bean id="appprops"
-                     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-            <spring:property name="location" value="classpath:application.properties"/>
-        </spring:bean>
-
-        <spring:bean id="appProperties"
+        <spring:bean id="appProps"
                      class="org.springframework.beans.factory.config.PropertiesFactoryBean">
             <spring:property name="singleton" value="true"/>
             <spring:property name="location" value="classpath:application.properties"/>
@@ -36,15 +32,18 @@
     <flow name="spring-property">
         <vm:inbound-endpoint exchange-pattern="request-response" path="springproperty.in">
             <logger message="Message received #[groovy:message.payload]" level="INFO"/>
+            <!-- set a session scoped property on the message -->
             <message-properties-transformer scope="session">
-                <add-message-property key="dynamickey" value="key3"/>
+                <add-message-property key="dynamickey" value="key4"/>
             </message-properties-transformer>
         </vm:inbound-endpoint>
+        <!-- use the property placeholder -->
         <logger message="key1 = ${key1}" level="INFO"/>
-        <logger message="key1 = #[groovy:registry.key1]" level="INFO"/>
-        <logger message="key2 = #[groovy:appProperties.key2]" level="INFO"/>
-        <logger message="key4 = #[groovy:appProperties.key4]" level="INFO"/>
-        <logger message="key3 = #[groovy:appProperties[message.getSessionProperty('dynamickey')]]" level="INFO"/>
+        <!-- use the appProps bean -->
+        <logger message="key2 = #[groovy:appProps.key2]" level="INFO"/>
+        <logger message="key3 = #[groovy:appProps['key3']]" level="INFO"/>
+        <!-- access property value based on message property -->
+        <logger message="key4 = #[groovy:appProps[message.getSessionProperty('dynamickey')]]" level="INFO"/>
         <append-string-transformer message="abc"/>
     </flow>
 </mule>
