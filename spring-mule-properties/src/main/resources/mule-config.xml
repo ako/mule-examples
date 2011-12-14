@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:spring="http://www.springframework.org/schema/beans"
+      xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+      xmlns:context="http://www.springframework.org/schema/context"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core  http://www.mulesoft.org/schema/mule/core/3.2/mule.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/3.2/mule-vm.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       ">
+    <context:property-placeholder location="classpath:application.properties"
+                                  system-properties-mode="OVERRIDE"
+                                  ignore-resource-not-found="false"
+                                  ignore-unresolvable="false"/>
+
+    <spring:beans>
+        <spring:bean id="appprops"
+                     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+            <spring:property name="location" value="classpath:application.properties"/>
+        </spring:bean>
+
+        <spring:bean id="appProperties"
+                     class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+            <spring:property name="singleton" value="true"/>
+            <spring:property name="location" value="classpath:application.properties"/>
+            <spring:property name="properties">
+                <spring:props>
+                    <spring:prop key="key4">value4</spring:prop>
+                </spring:props>
+            </spring:property>
+        </spring:bean>
+    </spring:beans>
+
+    <flow name="spring-property">
+        <vm:inbound-endpoint exchange-pattern="request-response" path="springproperty.in">
+            <logger message="Message received #[groovy:message.payload]" level="INFO"/>
+            <message-properties-transformer scope="session">
+                <add-message-property key="dynamickey" value="key3"/>
+            </message-properties-transformer>
+        </vm:inbound-endpoint>
+        <logger message="key1 = ${key1}" level="INFO"/>
+        <logger message="key1 = #[groovy:registry.key1]" level="INFO"/>
+        <logger message="key2 = #[groovy:appProperties.key2]" level="INFO"/>
+        <logger message="key4 = #[groovy:appProperties.key4]" level="INFO"/>
+        <logger message="key3 = #[groovy:appProperties[message.getSessionProperty('dynamickey')]]" level="INFO"/>
+        <append-string-transformer message="abc"/>
+    </flow>
+</mule>
