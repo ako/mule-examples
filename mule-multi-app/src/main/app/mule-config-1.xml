@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Project: IegiXmlProxy -->
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:mule-xml="http://www.mulesoft.org/schema/mule/xml"
+      xmlns:ws="http://www.mulesoft.org/schema/mule/ws"
+      xmlns:https="http://www.mulesoft.org/schema/mule/https"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:stdio="http://www.mulesoft.org/schema/mule/stdio"
+      xmlns:pattern="http://www.mulesoft.org/schema/mule/pattern"
+      xmlns:context="http://www.springframework.org/schema/context"
+      xmlns:spring="http://www.springframework.org/schema/beans"
+      xmlns:script="http://www.mulesoft.org/schema/mule/scripting"
+      xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+      xsi:schemaLocation="
+          http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/3.1/mule.xsd
+          http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/3.1/mule-xml.xsd
+          http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/3.1/mule-ws.xsd
+          http://www.mulesoft.org/schema/mule/https http://www.mulesoft.org/schema/mule/https/3.1/mule-https.xsd
+          http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/3.1/mule-http.xsd
+          http://www.mulesoft.org/schema/mule/stdio http://www.mulesoft.org/schema/mule/stdio/3.1/mule-stdio.xsd
+          http://www.mulesoft.org/schema/mule/pattern http://www.mulesoft.org/schema/mule/pattern/3.1/mule-pattern.xsd
+          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+          http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+          http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/3.1/mule-scripting.xsd
+          http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/3.1/mule-jms.xsd">
+
+
+    <context:property-placeholder
+            ignore-unresolvable="true" ignore-resource-not-found="true"
+            location="classpath:multi-app-1.properties"/>
+
+
+    <script:script engine="groovy" name="SoapEnvelope">
+        <![CDATA[
+        def cdataStart = "<![" + "CDATA["
+        def cdataEnd = "]" + "]>"
+"""
+<Envelope>
+<Body>
+${cdataStart}
+${message.payload}
+${cdataEnd}
+</Body>
+</Envelope>
+"""
+               ]]>
+    </script:script>
+
+
+    <flow name="app1HttpListener">
+        <composite-source>
+            <http:inbound-endpoint host="localhost" port="${app1.http.port}"
+                                   connector-ref="httpConnector" path="${app1.http.path.prefix}"
+                                   exchange-pattern="request-response"/>
+            <jms:inbound-endpoint queue="${app1.jms.inbound.queue}"/>
+        </composite-source>
+        <logger level="INFO" message="message = #[groovy:message]"/>
+        <logger level="INFO" message="app.name = ${app.name}"/>
+        <logger level="INFO" message="app.http.port = ${app.http.port}"/>
+        <logger level="INFO" message="app.http.path.prefix = ${app.http.path.prefix}"/>
+        <logger level="INFO" message="app1.http.port = ${app1.http.port}"/>
+        <logger level="INFO" message="app1.http.path.prefix = ${app1.http.path.prefix}"/>
+        <logger level="INFO" message="app2.http.port = ${app2.http.port}"/>
+        <logger level="INFO" message="app2.http.path.prefix = ${app2.http.path.prefix}"/>
+        <script:component script-ref="SoapEnvelope"/>
+        <object-to-string-transformer/>
+        <logger level="INFO" message="Message = #[groovy:message]"/>
+    </flow>
+
+</mule>
