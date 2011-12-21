@@ -34,9 +34,6 @@ ${cdataEnd}
                ]]>
     </script:script>
 
-
-
-
     <flow name="app1HttpListener">
             <jms:inbound-endpoint queue="${app1.jms.inbound.queue}" exchange-pattern="request-response"
                     responseTransformer-refs="object-to-string-transformer renameContentType loggerTransformer"/>

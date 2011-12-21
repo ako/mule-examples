@@ -12,7 +12,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mule.version>3.1.2</mule.version>
-        <activemqVersion>5.5.0</activemqVersion>
+        <activemqVersion>5.5.1</activemqVersion>
     </properties>
     <dependencies>
         <dependency>
